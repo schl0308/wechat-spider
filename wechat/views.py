@@ -429,3 +429,43 @@ def api_add(request):
                 'ret': 0,
                 'message': '已更新'
             })
+
+
+@csrf_exempt
+def api_topic_refresh(request, id_):
+    """刷新单篇文章,将其URL推送到下载队列"""
+    topic = get_object_or_404(Topic, pk=id_)
+    data = {
+        'kind': KIND_DETAIL,
+        'url': topic.url
+    }
+    r = get_redis()
+    r.rpush(settings.CRAWLER_CONFIG["downloader"], json.dumps(data))
+    return JsonResponse({
+        'ret': 0,
+        'message': '已提交刷新请求'
+    })
+
+
+@csrf_exempt
+def api_topic_batch_refresh(request):
+    """批量刷新选中的文章"""
+    topic_ids = request.POST.getlist('topic_ids[]')
+    success_count = 0
+    r = get_redis()
+    for tid in topic_ids:
+        try:
+            topic = Topic.objects.get(pk=int(tid))
+            data = {
+                'kind': KIND_DETAIL,
+                'url': topic.url
+            }
+            r.rpush(settings.CRAWLER_CONFIG["downloader"], json.dumps(data))
+            success_count += 1
+        except (Topic.DoesNotExist, ValueError):
+            pass
+    return JsonResponse({
+        'ret': 0,
+        'message': '已提交 %d 个刷新请求' % success_count,
+        'count': success_count
+    })

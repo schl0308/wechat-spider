@@ -7,6 +7,8 @@ from . import views
 urlpatterns = [
     url(r'^add/$', views.api_add, name="wechat.api_add"),
     url(r'^topic/add/$', views.api_topic_add, name="wechat.api_topic_add"),
+    url(r'^topic/(?P<id_>\d+)/refresh/$', views.api_topic_refresh, name="wechat.api_topic_refresh"),
+    url(r'^topic/batch-refresh/$', views.api_topic_batch_refresh, name="wechat.api_topic_batch_refresh"),
     url(r'^search/$', views.api_search, name="wechat.api_search"),
 
 ]
